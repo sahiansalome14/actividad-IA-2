@@ -105,9 +105,18 @@ def build_models():
                              bootstrap=True, bootstrap_features=bag_boot_feat,
                              random_state=42, n_jobs=-1)
     if boost_type == "AdaBoost":
-        bst = AdaBoostClassifier(estimator=DecisionTreeClassifier(max_depth=2, random_state=42),
-                                  n_estimators=boost_n, learning_rate=boost_lr,
-                                  algorithm="SAMME", random_state=42)
+        import sklearn
+        ada_kwargs = dict(
+            estimator=DecisionTreeClassifier(max_depth=2, random_state=42),
+            n_estimators=boost_n,
+            learning_rate=boost_lr,
+            random_state=42
+        )
+        # algorithm="SAMME" was removed in sklearn 1.6+
+        sk_version = tuple(int(x) for x in sklearn.__version__.split(".")[:2])
+        if sk_version < (1, 6):
+            ada_kwargs["algorithm"] = "SAMME"
+        bst = AdaBoostClassifier(**ada_kwargs)
     else:
         bst = GradientBoostingClassifier(n_estimators=boost_n, learning_rate=boost_lr,
                                           max_depth=gb_depth, subsample=gb_sub, random_state=42)
